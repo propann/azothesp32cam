@@ -57,7 +57,7 @@ void DisplayManager::drawBootUi() {
     g_tft.setTextSize(2);
     g_tft.setTextColor(TFT_WHITE);
     g_tft.drawString("Cablage securise : OPERATIONNEL", 20, 60);
-    g_tft.drawString("Actionne le tactile pour valider le bus I2C.", 20, 85);
+    g_tft.drawString("Touch = capture camera + diagnostic", 20, 85);
 
     g_tft.drawRect(80, 120, 320, 180, TFT_BLUE);
     g_tft.setTextColor(TFT_BLUE);
@@ -66,4 +66,11 @@ void DisplayManager::drawBootUi() {
 
 void DisplayManager::drawTouchMarker(int x, int y) {
     g_tft.fillRect(x - 6, y - 6, 12, 12, TFT_GREEN);
+}
+
+void DisplayManager::drawStatusLine(const char* message, int color) {
+    g_tft.fillRect(0, 290, 480, 24, TFT_BLACK);
+    g_tft.setTextSize(1);
+    g_tft.setTextColor(color);
+    g_tft.drawString(message, 8, 296);
 }
