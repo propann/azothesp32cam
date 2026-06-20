@@ -21,7 +21,7 @@ constexpr int kPinVsync = 6;
 constexpr int kPinHref = 7;
 constexpr int kPinPclk = 13;
 constexpr int kSensorControlCount = static_cast<int>(SensorControl::Count);
-constexpr int kXclkFreqHz = 20000000;
+constexpr int kXclkFreqHz = 10000000;
 
 camera_config_t makeCameraConfig() {
     camera_config_t config{};
@@ -44,7 +44,7 @@ camera_config_t makeCameraConfig() {
     config.pin_pwdn = kPinPwdn;
     config.pin_reset = kPinReset;
     config.xclk_freq_hz = kXclkFreqHz;
-    config.frame_size = FRAMESIZE_QVGA;
+    config.frame_size = FRAMESIZE_HVGA;
     config.pixel_format = PIXFORMAT_RGB565;
     config.grab_mode = CAMERA_GRAB_LATEST;
     config.fb_location = CAMERA_FB_IN_PSRAM;
@@ -79,18 +79,17 @@ bool CameraManager::begin() {
     sensor_t* sensor = esp_camera_sensor_get();
     if (sensor != nullptr) {
         sensor->set_pixformat(sensor, PIXFORMAT_RGB565);
-        sensor->set_framesize(sensor, FRAMESIZE_QVGA);
+        sensor->set_framesize(sensor, FRAMESIZE_HVGA);
+        sensor->set_vflip(sensor, 1);
+        sensor->set_hmirror(sensor, 1);
+        sensor->set_whitebal(sensor, 1);
+        sensor->set_gain_ctrl(sensor, 1);
+        sensor->set_exposure_ctrl(sensor, 1);
+
         if (sensor->id.PID == 0x5640) {
             modelName_ = "OV5640 AF";
-            sensor->set_vflip(sensor, 1);
-            sensor->set_hmirror(sensor, 1);
-            sensor->set_whitebal(sensor, 1);
-            sensor->set_awb_gain(sensor, 1);
-            sensor->set_gain_ctrl(sensor, 1);
-            sensor->set_exposure_ctrl(sensor, 1);
         } else if (sensor->id.PID == 0x2642) {
             modelName_ = "OV2640";
-            sensor->set_vflip(sensor, 1);
         } else {
             modelName_ = "OmniVision";
         }
@@ -99,7 +98,7 @@ bool CameraManager::begin() {
     initialized_ = true;
     Serial.printf("[CAM] Camera prete: %s RGB565 %s PSRAM=%s\n",
                   modelName_,
-                  "QVGA 320x240 SAFE",
+                  "HVGA 480x320 FULLSCREEN",
                   psramFound() ? "oui" : "non");
     return true;
 }
