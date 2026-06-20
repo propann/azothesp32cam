@@ -163,8 +163,7 @@ void DisplayManager::drawPreview(const CameraFrameInfo& frame) {
     if (frame.width == 480 && frame.height == 320) {
         g_tft.pushImage(0, 0, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
     } else if (frame.width == 320 && frame.height == 240) {
-        g_tft.pushImage(0, -20, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
-        g_tft.pushImage(160, -20, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
+        g_tft.pushImage(80, 40, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
     } else {
         const int x = (480 - frame.width) / 2;
         const int y = (320 - frame.height) / 2;
