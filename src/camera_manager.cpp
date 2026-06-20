@@ -21,7 +21,7 @@ constexpr int kPinVsync = 6;
 constexpr int kPinHref = 7;
 constexpr int kPinPclk = 13;
 constexpr int kSensorControlCount = static_cast<int>(SensorControl::Count);
-constexpr int kXclkFreqHz = 12000000;
+constexpr int kXclkFreqHz = 24000000;
 
 camera_config_t makeCameraConfig() {
     camera_config_t config{};
@@ -46,7 +46,7 @@ camera_config_t makeCameraConfig() {
     config.xclk_freq_hz = kXclkFreqHz;
     config.frame_size = FRAMESIZE_HVGA;
     config.pixel_format = PIXFORMAT_RGB565;
-    config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+    config.grab_mode = CAMERA_GRAB_LATEST;
     config.fb_location = CAMERA_FB_IN_PSRAM;
     config.jpeg_quality = 10;
     config.fb_count = 2;
@@ -88,7 +88,7 @@ bool CameraManager::begin() {
     // reset() est la reinitialisation logicielle de sensor_t. set_res_raw()
     // configure une fenetre avec 12 parametres et ne doit pas servir au reset.
     int sensorError = sensor->reset(sensor);
-    delay(100);
+    delay(150);
     sensorError |= sensor->set_pixformat(sensor, PIXFORMAT_RGB565);
     sensorError |= sensor->set_framesize(sensor, FRAMESIZE_HVGA);
     sensorError |= sensor->set_vflip(sensor, 1);
@@ -98,6 +98,8 @@ bool CameraManager::begin() {
     sensorError |= sensor->set_exposure_ctrl(sensor, 1);
     sensorError |= sensor->set_raw_gma(sensor, 0);
     sensorError |= sensor->set_aec2(sensor, 0);
+    sensorError |= sensor->set_bpc(sensor, 1);
+    sensorError |= sensor->set_wpc(sensor, 1);
 
     if (sensorError != 0) {
         Serial.printf("[CAM_ERR] Configuration SCCB incomplete: %d\n", sensorError);
