@@ -34,6 +34,7 @@ AppState g_state = AppState::Live;
 uint32_t g_lastTouchActionMs = 0;
 uint32_t g_captureCount = 0;
 uint32_t g_frameCount = 0;
+uint32_t g_lastNoFrameMs = 0;
 
 bool touchActionReady() {
     const uint32_t now = millis();
@@ -155,6 +156,10 @@ void loop() {
         }
         g_glitch.apply(frameInfo.data, frameInfo.width, frameInfo.height);
         g_display.drawPreview(frameInfo);
+    } else if (millis() - g_lastNoFrameMs > 1000) {
+        g_lastNoFrameMs = millis();
+        Serial.println("[CAM] aucune frame recue");
+        g_display.drawFrameStatus("NO CAMERA FRAME");
     }
 
     const TouchState touch = g_touch.update();
@@ -183,5 +188,5 @@ void loop() {
     }
 
     g_camera.releaseFrame();
-    delay(10);
+    delay(45);
 }

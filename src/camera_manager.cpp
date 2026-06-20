@@ -21,6 +21,7 @@ constexpr int kPinVsync = 6;
 constexpr int kPinHref = 7;
 constexpr int kPinPclk = 13;
 constexpr int kSensorControlCount = static_cast<int>(SensorControl::Count);
+constexpr int kXclkFreqHz = 10000000;
 
 camera_config_t makeCameraConfig() {
     camera_config_t config{};
@@ -42,14 +43,14 @@ camera_config_t makeCameraConfig() {
     config.pin_sccb_scl = kPinSioc;
     config.pin_pwdn = kPinPwdn;
     config.pin_reset = kPinReset;
-    config.xclk_freq_hz = 20000000;
+    config.xclk_freq_hz = kXclkFreqHz;
     const bool hasPsram = psramFound();
-    config.frame_size = hasPsram ? FRAMESIZE_HVGA : FRAMESIZE_QVGA;
+    config.frame_size = FRAMESIZE_QVGA;
     config.pixel_format = PIXFORMAT_RGB565;
     config.grab_mode = CAMERA_GRAB_LATEST;
     config.fb_location = hasPsram ? CAMERA_FB_IN_PSRAM : CAMERA_FB_IN_DRAM;
     config.jpeg_quality = 12;
-    config.fb_count = hasPsram ? 2 : 1;
+    config.fb_count = 1;
     return config;
 }
 }  // namespace
@@ -71,6 +72,8 @@ bool CameraManager::begin() {
 
     sensor_t* sensor = esp_camera_sensor_get();
     if (sensor != nullptr) {
+        sensor->set_pixformat(sensor, PIXFORMAT_RGB565);
+        sensor->set_framesize(sensor, FRAMESIZE_QVGA);
         if (sensor->id.PID == 0x5640) {
             modelName_ = "OV5640 AF";
             sensor->set_vflip(sensor, 1);
@@ -89,7 +92,7 @@ bool CameraManager::begin() {
     initialized_ = true;
     Serial.printf("[CAM] Camera prete: %s RGB565 %s PSRAM=%s\n",
                   modelName_,
-                  psramFound() ? "HVGA 480x320" : "QVGA 320x240",
+                  "QVGA 320x240 SAFE",
                   psramFound() ? "oui" : "non");
     return true;
 }

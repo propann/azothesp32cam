@@ -84,7 +84,7 @@ void DisplayManager::drawBootUi(bool cameraReady, bool storageReady, const char*
 
     g_tft.setTextSize(1);
     g_tft.setTextColor(TFT_LIGHTGREY);
-    g_tft.drawString("RGB565 HVGA | GLITCH RAM | SDMMC 1-bit", 25, 50);
+    g_tft.drawString("RGB565 QVGA SAFE | GLITCH RAM | SDMMC 1-bit", 25, 50);
 
     g_tft.drawRect(80, 70, 320, 240, 0x18E3);
     g_tft.drawLine(240, 160, 240, 180, TFT_GREEN);
@@ -163,12 +163,21 @@ void DisplayManager::drawPreview(const CameraFrameInfo& frame) {
     if (frame.width == 480 && frame.height == 320) {
         g_tft.pushImage(0, 0, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
     } else if (frame.width == 320 && frame.height == 240) {
-        g_tft.pushImage(80, 40, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
+        g_tft.pushImage(0, -20, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
+        g_tft.pushImage(160, -20, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
     } else {
         const int x = (480 - frame.width) / 2;
         const int y = (320 - frame.height) / 2;
         g_tft.pushImage(x, y, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
     }
+}
+
+void DisplayManager::drawFrameStatus(const char* message) {
+    g_tft.setTextSize(2);
+    g_tft.setTextColor(TFT_BLACK);
+    g_tft.drawCenterString(message, 241, 151);
+    g_tft.setTextColor(TFT_RED);
+    g_tft.drawCenterString(message, 240, 150);
 }
 
 void DisplayManager::drawButton(const UiButton& button) {

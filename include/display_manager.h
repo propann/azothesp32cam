@@ -25,6 +25,7 @@ public:
     void drawCaptureFlash();
     void drawError(const char* title, esp_err_t err);
     void drawPreview(const CameraFrameInfo& frame);
+    void drawFrameStatus(const char* message);
     void drawButton(const UiButton& button);
     void drawTouchMarker(int x, int y);
     void drawStatusLine(const char* message, int color);
