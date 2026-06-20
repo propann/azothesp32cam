@@ -24,7 +24,7 @@ public:
     void drawMenuOverlay(const char* effectName, int intensity, const char* sensorName, int sensorValue);
     void drawCaptureFlash();
     void drawError(const char* title, esp_err_t err);
-    void drawPreview(const CameraFrameInfo& frame);
+    bool drawPreview(const CameraFrameInfo& frame);
     void drawFrameStatus(const char* message);
     void drawButton(const UiButton& button);
     void drawTouchMarker(int x, int y);

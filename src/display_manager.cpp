@@ -155,20 +155,25 @@ void DisplayManager::drawError(const char* title, esp_err_t err) {
     g_tft.drawCenterString(message, 240, 168);
 }
 
-void DisplayManager::drawPreview(const CameraFrameInfo& frame) {
-    if (frame.data == nullptr || frame.format != PIXFORMAT_RGB565) {
-        return;
+bool DisplayManager::drawPreview(const CameraFrameInfo& frame) {
+    const size_t expectedLength = static_cast<size_t>(frame.width) * frame.height * sizeof(uint16_t);
+    if (frame.data == nullptr
+        || frame.format != PIXFORMAT_RGB565
+        || frame.width == 0
+        || frame.height == 0
+        || frame.length < expectedLength
+        || frame.width > g_tft.width()
+        || frame.height > g_tft.height()) {
+        return false;
     }
 
-    if (frame.width == 480 && frame.height == 320) {
-        g_tft.pushImage(0, 0, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
-    } else if (frame.width == 320 && frame.height == 240) {
-        g_tft.pushImage(80, 40, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
-    } else {
-        const int x = (480 - frame.width) / 2;
-        const int y = (320 - frame.height) / 2;
-        g_tft.pushImage(x, y, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
-    }
+    const int x = (g_tft.width() - frame.width) / 2;
+    const int y = (g_tft.height() - frame.height) / 2;
+
+    // Efface l'ancienne interface et conserve des marges noires regulieres.
+    g_tft.fillScreen(TFT_BLACK);
+    g_tft.pushImage(x, y, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
+    return true;
 }
 
 void DisplayManager::drawFrameStatus(const char* message) {
