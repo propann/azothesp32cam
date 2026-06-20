@@ -47,6 +47,7 @@ bool DisplayManager::begin() {
     g_tft.init();
     g_tft.setRotation(1);
     g_tft.setSwapBytes(true);
+    g_tft.setColorDepth(16);
     g_tft.fillScreen(TFT_BLACK);
 
     const bool ready = g_tft.width() == 480 && g_tft.height() == 320;
