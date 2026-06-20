@@ -84,7 +84,7 @@ void DisplayManager::drawBootUi(bool cameraReady, bool storageReady, const char*
 
     g_tft.setTextSize(1);
     g_tft.setTextColor(TFT_LIGHTGREY);
-    g_tft.drawString("RGB565 QVGA | GLITCH RAM | SDMMC 1-bit", 25, 50);
+    g_tft.drawString("RGB565 HVGA | GLITCH RAM | SDMMC 1-bit", 25, 50);
 
     g_tft.drawRect(80, 70, 320, 240, 0x18E3);
     g_tft.drawLine(240, 160, 240, 180, TFT_GREEN);
@@ -97,16 +97,25 @@ void DisplayManager::drawBootUi(bool cameraReady, bool storageReady, const char*
 }
 
 void DisplayManager::drawLiveOverlay(const char* effectName, int intensity, const char* sensorName, int sensorValue, bool storageReady) {
-    g_tft.fillRect(0, 0, 480, 28, TFT_BLACK);
     g_tft.setTextSize(1);
+    g_tft.setTextColor(TFT_BLACK);
+    g_tft.drawString("AZOTH", 9, 9);
     g_tft.setTextColor(TFT_WHITE);
     g_tft.drawString("AZOTH", 8, 8);
+    g_tft.setTextColor(TFT_BLACK);
+    g_tft.drawString(effectName, 73, 9);
     g_tft.setTextColor(TFT_CYAN);
     g_tft.drawString(effectName, 72, 8);
+    g_tft.setTextColor(TFT_BLACK);
+    g_tft.drawString((String("INT ") + String(intensity)).c_str(), 171, 9);
     g_tft.setTextColor(TFT_GREEN);
     g_tft.drawString((String("INT ") + String(intensity)).c_str(), 170, 8);
+    g_tft.setTextColor(TFT_BLACK);
+    g_tft.drawString((String(sensorName) + " " + String(sensorValue)).c_str(), 239, 9);
     g_tft.setTextColor(TFT_ORANGE);
     g_tft.drawString((String(sensorName) + " " + String(sensorValue)).c_str(), 238, 8);
+    g_tft.setTextColor(TFT_BLACK);
+    g_tft.drawRightString(storageReady ? "SD" : "NO SD", 471, 9);
     g_tft.setTextColor(storageReady ? TFT_GREEN : TFT_ORANGE);
     g_tft.drawRightString(storageReady ? "SD" : "NO SD", 470, 8);
 
@@ -115,9 +124,12 @@ void DisplayManager::drawLiveOverlay(const char* effectName, int intensity, cons
 }
 
 void DisplayManager::drawMenuOverlay(const char* effectName, int intensity, const char* sensorName, int sensorValue) {
-    g_tft.fillRect(100, 42, 280, 236, TFT_BLACK);
-    g_tft.drawRect(100, 42, 280, 236, TFT_DARKGREY);
+    g_tft.drawRect(100, 42, 280, 236, TFT_BLACK);
+    g_tft.drawRect(101, 43, 278, 234, TFT_WHITE);
     g_tft.setTextSize(1);
+    g_tft.setTextColor(TFT_BLACK);
+    g_tft.drawString((String("FX: ") + effectName + String(" / ") + String(intensity)).c_str(), 117, 53);
+    g_tft.drawString((String("CAPTEUR: ") + sensorName + " " + String(sensorValue)).c_str(), 117, 69);
     g_tft.setTextColor(TFT_LIGHTGREY);
     g_tft.drawString((String("FX: ") + effectName + String(" / ") + String(intensity)).c_str(), 116, 52);
     g_tft.drawString((String("CAPTEUR: ") + sensorName + " " + String(sensorValue)).c_str(), 116, 68);
@@ -148,7 +160,9 @@ void DisplayManager::drawPreview(const CameraFrameInfo& frame) {
         return;
     }
 
-    if (frame.width == 320 && frame.height == 240) {
+    if (frame.width == 480 && frame.height == 320) {
+        g_tft.pushImage(0, 0, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
+    } else if (frame.width == 320 && frame.height == 240) {
         g_tft.pushImage(80, 40, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
     } else {
         const int x = (480 - frame.width) / 2;
@@ -158,9 +172,13 @@ void DisplayManager::drawPreview(const CameraFrameInfo& frame) {
 }
 
 void DisplayManager::drawButton(const UiButton& button) {
+    g_tft.drawRoundRect(button.x + 1, button.y + 1, button.w, button.h, 6, TFT_BLACK);
+    g_tft.drawRoundRect(button.x - 1, button.y - 1, button.w, button.h, 6, TFT_BLACK);
     g_tft.drawRoundRect(button.x, button.y, button.w, button.h, 6, button.color);
-    g_tft.setTextColor(button.color);
+    g_tft.setTextColor(TFT_BLACK);
     g_tft.setTextSize(2);
+    g_tft.drawCenterString(button.label, button.x + button.w / 2 + 1, button.y + button.h / 2 - 7);
+    g_tft.setTextColor(button.color);
     g_tft.drawCenterString(button.label, button.x + button.w / 2, button.y + button.h / 2 - 8);
 }
 

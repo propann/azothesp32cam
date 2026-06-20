@@ -33,6 +33,7 @@ constexpr UiButton kMenuBackButton{140, 232, 200, 38, "RETOUR", TFT_RED};
 AppState g_state = AppState::Live;
 uint32_t g_lastTouchActionMs = 0;
 uint32_t g_captureCount = 0;
+uint32_t g_frameCount = 0;
 
 bool touchActionReady() {
     const uint32_t now = millis();
@@ -144,6 +145,14 @@ void loop() {
     camera_fb_t* frame = g_camera.capture();
     CameraFrameInfo frameInfo{};
     if (g_camera.getFrameInfo(frame, frameInfo)) {
+        ++g_frameCount;
+        if (g_frameCount % 60 == 0) {
+            Serial.printf("[CAM] live frame #%lu %ux%u len=%u\n",
+                          static_cast<unsigned long>(g_frameCount),
+                          frameInfo.width,
+                          frameInfo.height,
+                          static_cast<unsigned>(frameInfo.length));
+        }
         g_glitch.apply(frameInfo.data, frameInfo.width, frameInfo.height);
         g_display.drawPreview(frameInfo);
     }

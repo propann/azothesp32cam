@@ -43,10 +43,10 @@ camera_config_t makeCameraConfig() {
     config.pin_pwdn = kPinPwdn;
     config.pin_reset = kPinReset;
     config.xclk_freq_hz = 20000000;
-    config.frame_size = FRAMESIZE_QVGA;
+    const bool hasPsram = psramFound();
+    config.frame_size = hasPsram ? FRAMESIZE_HVGA : FRAMESIZE_QVGA;
     config.pixel_format = PIXFORMAT_RGB565;
     config.grab_mode = CAMERA_GRAB_LATEST;
-    const bool hasPsram = psramFound();
     config.fb_location = hasPsram ? CAMERA_FB_IN_PSRAM : CAMERA_FB_IN_DRAM;
     config.jpeg_quality = 12;
     config.fb_count = hasPsram ? 2 : 1;
@@ -87,7 +87,10 @@ bool CameraManager::begin() {
     }
 
     initialized_ = true;
-    Serial.printf("[CAM] Camera prete: %s RGB565 QVGA PSRAM=%s\n", modelName_, psramFound() ? "oui" : "non");
+    Serial.printf("[CAM] Camera prete: %s RGB565 %s PSRAM=%s\n",
+                  modelName_,
+                  psramFound() ? "HVGA 480x320" : "QVGA 320x240",
+                  psramFound() ? "oui" : "non");
     return true;
 }
 
