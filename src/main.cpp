@@ -9,6 +9,8 @@ constexpr uint8_t kWarmupFrameCount = 5;
 
 DisplayManager g_display;
 CameraManager g_camera;
+uint32_t g_frameCount = 0;
+uint32_t g_lastCaptureErrorMs = 0;
 
 bool captureAndDisplay() {
     // Les premieres trames ont souvent une exposition et une balance des blancs
@@ -71,10 +73,26 @@ void setup() {
         return;
     }
 
-    Serial.println("[DISPLAY] Capture affichee au centre");
+    Serial.println("[DISPLAY] Flux video centre actif");
 }
 
 void loop() {
-    // Image fixe de validation: ne pas ecraser la capture affichee.
-    delay(1000);
+    camera_fb_t* frame = g_camera.capture();
+    CameraFrameInfo frameInfo{};
+
+    if (g_camera.getFrameInfo(frame, frameInfo) && g_display.drawPreview(frameInfo)) {
+        ++g_frameCount;
+        if (g_frameCount % 120 == 0) {
+            Serial.printf("[CAM] Flux #%lu %ux%u\n",
+                          static_cast<unsigned long>(g_frameCount),
+                          frameInfo.width,
+                          frameInfo.height);
+        }
+    } else if (millis() - g_lastCaptureErrorMs >= 1000) {
+        g_lastCaptureErrorMs = millis();
+        Serial.println("[CAM] Trame RGB565 indisponible");
+    }
+
+    // pushImage est synchrone: le tampon peut etre rendu a la camera ensuite.
+    g_camera.releaseFrame();
 }

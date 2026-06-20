@@ -30,4 +30,7 @@ public:
     void drawTouchMarker(int x, int y);
     void drawStatusLine(const char* message, int color);
     bool contains(const UiButton& button, const TouchPoint& point) const;
+
+private:
+    bool previewPrepared_ = false;
 };

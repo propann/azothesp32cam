@@ -57,6 +57,7 @@ bool DisplayManager::begin() {
 }
 
 void DisplayManager::drawSplash() {
+    previewPrepared_ = false;
     g_tft.fillScreen(TFT_BLACK);
     g_tft.fillRect(0, 0, 160, 18, TFT_RED);
     g_tft.fillRect(160, 0, 160, 18, TFT_GREEN);
@@ -170,8 +171,12 @@ bool DisplayManager::drawPreview(const CameraFrameInfo& frame) {
     const int x = (g_tft.width() - frame.width) / 2;
     const int y = (g_tft.height() - frame.height) / 2;
 
-    // Efface l'ancienne interface et conserve des marges noires regulieres.
-    g_tft.fillScreen(TFT_BLACK);
+    // Efface l'intro une seule fois. Effacer tout l'ecran a chaque trame
+    // provoquerait un scintillement et consommerait inutilement le bus SPI.
+    if (!previewPrepared_) {
+        g_tft.fillScreen(TFT_BLACK);
+        previewPrepared_ = true;
+    }
     g_tft.pushImage(x, y, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
     return true;
 }

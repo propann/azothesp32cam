@@ -21,7 +21,7 @@ constexpr int kPinVsync = 6;
 constexpr int kPinHref = 7;
 constexpr int kPinPclk = 13;
 constexpr int kSensorControlCount = static_cast<int>(SensorControl::Count);
-constexpr int kXclkFreqHz = 10000000;
+constexpr int kXclkFreqHz = 20000000;
 
 camera_config_t makeCameraConfig() {
     camera_config_t config{};
@@ -44,18 +44,24 @@ camera_config_t makeCameraConfig() {
     config.pin_pwdn = kPinPwdn;
     config.pin_reset = kPinReset;
     config.xclk_freq_hz = kXclkFreqHz;
-    const bool hasPsram = psramFound();
     config.frame_size = FRAMESIZE_QVGA;
     config.pixel_format = PIXFORMAT_RGB565;
     config.grab_mode = CAMERA_GRAB_LATEST;
-    config.fb_location = hasPsram ? CAMERA_FB_IN_PSRAM : CAMERA_FB_IN_DRAM;
-    config.jpeg_quality = 12;
-    config.fb_count = 1;
+    config.fb_location = CAMERA_FB_IN_PSRAM;
+    config.jpeg_quality = 10;
+    config.fb_count = 2;
     return config;
 }
 }  // namespace
 
 bool CameraManager::begin() {
+    if (!psramFound()) {
+        Serial.println("[CAM_ERR] PSRAM requise mais indisponible");
+        lastError_ = ESP_ERR_NO_MEM;
+        initialized_ = false;
+        return false;
+    }
+
     pinMode(kPinSiod, OUTPUT);
     pinMode(kPinSioc, OUTPUT);
     digitalWrite(kPinSiod, LOW);
@@ -80,6 +86,7 @@ bool CameraManager::begin() {
             sensor->set_hmirror(sensor, 1);
             sensor->set_whitebal(sensor, 1);
             sensor->set_awb_gain(sensor, 1);
+            sensor->set_gain_ctrl(sensor, 1);
             sensor->set_exposure_ctrl(sensor, 1);
         } else if (sensor->id.PID == 0x2642) {
             modelName_ = "OV2640";
