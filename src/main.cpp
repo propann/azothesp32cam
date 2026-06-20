@@ -93,6 +93,7 @@ void loop() {
         Serial.println("[CAM] Trame RGB565 indisponible");
     }
 
-    // pushImage est synchrone: le tampon peut etre rendu a la camera ensuite.
+    // drawPreview attend la fin du DMA avant que ce tampon soit rendu.
     g_camera.releaseFrame();
+    delay(1);
 }

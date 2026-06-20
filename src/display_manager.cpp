@@ -177,7 +177,16 @@ bool DisplayManager::drawPreview(const CameraFrameInfo& frame) {
         g_tft.fillScreen(TFT_BLACK);
         previewPrepared_ = true;
     }
-    g_tft.pushImage(x, y, frame.width, frame.height, reinterpret_cast<uint16_t*>(frame.data));
+    // L'OV5640 fournit chaque pixel RGB565 octet fort en premier. Le type
+    // swap565_t (rgb565_2Byte) indique explicitement cet ordre a LovyanGFX.
+    g_tft.pushImageDMA(x,
+                       y,
+                       frame.width,
+                       frame.height,
+                       reinterpret_cast<const lgfx::swap565_t*>(frame.data));
+
+    // Le framebuffer camera ne doit pas etre libere tant que le DMA le lit.
+    g_tft.waitDMA();
     return true;
 }
 
