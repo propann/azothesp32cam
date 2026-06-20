@@ -22,3 +22,37 @@
 | CTP_RST | 3V3 | I2C | Reset passif |
 | CTP_INT | Non connecté | I2C | Non utilisé (polling) |
 | SD_CS | Non connecté | SPI | Désactivé pour éviter conflits |
+
+## Caméra OV5640 AF
+| Signal caméra | Broche ESP32-S3 |
+|---|---:|
+| SIOD | GPIO 4 |
+| SIOC | GPIO 5 |
+| XCLK | GPIO 15 |
+| PCLK | GPIO 13 |
+| VSYNC | GPIO 6 |
+| HREF | GPIO 7 |
+| D0 | GPIO 11 |
+| D1 | GPIO 9 |
+| D2 | GPIO 8 |
+| D3 | GPIO 10 |
+| D4 | GPIO 12 |
+| D5 | GPIO 18 |
+| D6 | GPIO 17 |
+| D7 | GPIO 16 |
+| PWDN | Non connecté / -1 |
+| RESET | Non connecté / -1 |
+
+## MicroSD native SDMMC 1-bit
+| Signal SDMMC | Broche ESP32-S3 |
+|---|---:|
+| CLK | GPIO 39 |
+| CMD | GPIO 38 |
+| D0 | GPIO 40 |
+
+## Encodeur rotatif KY-040
+| Signal KY-040 | Broche ESP32-S3 | Note |
+|---|---:|---|
+| CLK / A | GPIO 1 | Entrée avec pull-up interne |
+| DT / B | GPIO 2 | Entrée avec pull-up interne |
+| SW | GPIO 42 | Bouton avec pull-up interne |

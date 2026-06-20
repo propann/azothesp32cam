@@ -11,6 +11,7 @@ Azoth GlitchCam S3 vise à capturer des images depuis une OV5640, à appliquer d
 - Tactile FT6336U (I2C)
 - Caméra OV5640
 - microSD (slot carte)
+- Encodeur rotatif KY-040
 
 ## Câblage validé
 Le schéma de référence figé est ici :
@@ -26,13 +27,15 @@ Azoth_GlitchCam/
 │   ├── display_manager.cpp
 │   ├── touch_manager.cpp
 │   ├── storage_manager.cpp
-│   └── glitch_engine.cpp
+│   ├── glitch_engine.cpp
+│   └── encoder_manager.cpp
 ├── include/
 │   ├── camera_manager.h
 │   ├── display_manager.h
 │   ├── touch_manager.h
 │   ├── storage_manager.h
-│   └── glitch_engine.h
+│   ├── glitch_engine.h
+│   └── encoder_manager.h
 └── docs/
     ├── wiring_matrix.md
     ├── spec_projet.md
@@ -42,14 +45,18 @@ Azoth_GlitchCam/
 ## Fonctionnement actuel (firmware de validation)
 - Initialisation écran et rendu UI.
 - Initialisation tactile sur GPIO 48/46.
-- Initialisation caméra (avec capture de diagnostic au toucher).
+- Initialisation caméra OV5640 AF en RGB565 QVGA.
 - Initialisation SD_MMC.
-- Logs série détaillés au boot et pendant les captures.
+- Preview temps réel avec glitch RGB565 en RAM.
+- Sauvegarde JPEG sur microSD depuis le framebuffer RGB565.
+- Contrôle tactile et encodeur KY-040.
+- Exploration capteur en direct : luminosité, contraste, saturation, effets internes, balance des blancs.
+- Effets glitch embarqués : RGB shift, corruption d'octets, scanline sort, miroir par bandes, solarisation, bruit, frame tear, masque de canaux.
 
 ## Limites actuelles
-- Le mapping OV5640 peut varier selon la variante exacte de carte ESP32-S3 CAM.
-- La sauvegarde JPEG est prête côté API (`StorageManager`) mais pas encore branchée dans le flux UI.
-- Le moteur de glitch est un squelette à compléter.
+- Les effets glitch sont temps réel et sans tampon secondaire, donc certains sont volontairement abrasifs.
+- Le dual-touch ajuste l'intensité, le menu tactile explore les effets et le capteur.
+- L'autofocus OV5640 n'est pas encore piloté explicitement.
 
 ## Démarrage rapide
 1. Installer VS Code + extension PlatformIO.
@@ -63,6 +70,6 @@ Azoth_GlitchCam/
 - Journal de progression: [`docs/developpement_suivi.md`](docs/developpement_suivi.md)
 
 ## Vision court terme
-1. Valider pinmap caméra réelle (et corriger `camera_manager`).
-2. Ajouter capture + sauvegarde JPEG sur action tactile.
-3. Ajouter preview caméra + premiers effets glitch temps réel.
+1. Ajouter un écran de réglages complet pour l'encodeur et le tactile.
+2. Ajouter des presets de style : VHS sale, scanner cassé, cyberpunk, noir et blanc brutal.
+3. Ajouter un pilotage autofocus OV5640 et des profils caméra.

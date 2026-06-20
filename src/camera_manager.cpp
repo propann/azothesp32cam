@@ -1,27 +1,26 @@
 #include "camera_manager.h"
 
-#include "esp_camera.h"
+#include <Arduino.h>
 
 namespace {
-// IMPORTANT: ajuster ce mapping à votre carte ESP32-S3 CAM OV5640 exacte.
-// Les valeurs ci-dessous servent de base de travail commune pour modules S3 + OV5640.
 constexpr int kPinPwdn = -1;
 constexpr int kPinReset = -1;
-constexpr int kPinXclk = 10;
-constexpr int kPinSiod = 40;
-constexpr int kPinSioc = 39;
+constexpr int kPinXclk = 15;
+constexpr int kPinSiod = 4;
+constexpr int kPinSioc = 5;
 
-constexpr int kPinD7 = 48;
-constexpr int kPinD6 = 11;
-constexpr int kPinD5 = 12;
-constexpr int kPinD4 = 14;
-constexpr int kPinD3 = 16;
-constexpr int kPinD2 = 18;
-constexpr int kPinD1 = 17;
-constexpr int kPinD0 = 15;
-constexpr int kPinVsync = 38;
-constexpr int kPinHref = 47;
+constexpr int kPinD0 = 11;
+constexpr int kPinD1 = 9;
+constexpr int kPinD2 = 8;
+constexpr int kPinD3 = 10;
+constexpr int kPinD4 = 12;
+constexpr int kPinD5 = 18;
+constexpr int kPinD6 = 17;
+constexpr int kPinD7 = 16;
+constexpr int kPinVsync = 6;
+constexpr int kPinHref = 7;
 constexpr int kPinPclk = 13;
+constexpr int kSensorControlCount = static_cast<int>(SensorControl::Count);
 
 camera_config_t makeCameraConfig() {
     camera_config_t config{};
@@ -45,37 +44,73 @@ camera_config_t makeCameraConfig() {
     config.pin_reset = kPinReset;
     config.xclk_freq_hz = 20000000;
     config.frame_size = FRAMESIZE_QVGA;
-    config.pixel_format = PIXFORMAT_JPEG;
+    config.pixel_format = PIXFORMAT_RGB565;
     config.grab_mode = CAMERA_GRAB_LATEST;
-    config.fb_location = CAMERA_FB_IN_PSRAM;
+    const bool hasPsram = psramFound();
+    config.fb_location = hasPsram ? CAMERA_FB_IN_PSRAM : CAMERA_FB_IN_DRAM;
     config.jpeg_quality = 12;
-    config.fb_count = 2;
+    config.fb_count = hasPsram ? 2 : 1;
     return config;
 }
 }  // namespace
 
 bool CameraManager::begin() {
+    pinMode(kPinSiod, OUTPUT);
+    pinMode(kPinSioc, OUTPUT);
+    digitalWrite(kPinSiod, LOW);
+    digitalWrite(kPinSioc, LOW);
+    delay(50);
+
     const camera_config_t config = makeCameraConfig();
-    const esp_err_t err = esp_camera_init(&config);
-    initialized_ = (err == ESP_OK);
-    return initialized_;
+    lastError_ = esp_camera_init(&config);
+    if (lastError_ != ESP_OK) {
+        Serial.printf("[CAM_ERR] esp_camera_init a echoue avec code 0x%x\n", lastError_);
+        initialized_ = false;
+        return false;
+    }
+
+    sensor_t* sensor = esp_camera_sensor_get();
+    if (sensor != nullptr) {
+        if (sensor->id.PID == 0x5640) {
+            modelName_ = "OV5640 AF";
+            sensor->set_vflip(sensor, 1);
+            sensor->set_hmirror(sensor, 1);
+            sensor->set_whitebal(sensor, 1);
+            sensor->set_awb_gain(sensor, 1);
+            sensor->set_exposure_ctrl(sensor, 1);
+        } else if (sensor->id.PID == 0x2642) {
+            modelName_ = "OV2640";
+            sensor->set_vflip(sensor, 1);
+        } else {
+            modelName_ = "OmniVision";
+        }
+    }
+
+    initialized_ = true;
+    Serial.printf("[CAM] Camera prete: %s RGB565 QVGA PSRAM=%s\n", modelName_, psramFound() ? "oui" : "non");
+    return true;
 }
 
-bool CameraManager::captureFrame(CameraFrameInfo& info) {
+camera_fb_t* CameraManager::capture() {
     if (!initialized_) {
-        return false;
+        return nullptr;
     }
 
     releaseFrame();
     currentFrame_ = esp_camera_fb_get();
-    if (currentFrame_ == nullptr) {
+    return currentFrame_;
+}
+
+bool CameraManager::getFrameInfo(const camera_fb_t* frame, CameraFrameInfo& info) const {
+    if (frame == nullptr) {
         return false;
     }
 
-    info.length = currentFrame_->len;
-    info.width = currentFrame_->width;
-    info.height = currentFrame_->height;
-    info.format = static_cast<uint32_t>(currentFrame_->format);
+    info.data = frame->buf;
+    info.length = frame->len;
+    info.width = frame->width;
+    info.height = frame->height;
+    info.format = static_cast<uint32_t>(frame->format);
     return true;
 }
 
@@ -86,6 +121,90 @@ void CameraManager::releaseFrame() {
     }
 }
 
-bool CameraManager::isReady() const {
-    return initialized_;
+esp_err_t CameraManager::lastError() const {
+    return lastError_;
+}
+
+const char* CameraManager::modelName() const {
+    return modelName_;
+}
+
+void CameraManager::nextSensorControl(int direction) {
+    int next = static_cast<int>(sensorControl_) + direction;
+    while (next < 0) {
+        next += kSensorControlCount;
+    }
+    sensorControl_ = static_cast<SensorControl>(next % kSensorControlCount);
+}
+
+void CameraManager::adjustSensorControl(int delta) {
+    const int index = static_cast<int>(sensorControl_);
+    int minValue = -2;
+    int maxValue = 2;
+
+    if (sensorControl_ == SensorControl::SpecialEffect) {
+        minValue = 0;
+        maxValue = 6;
+    } else if (sensorControl_ == SensorControl::WhiteBalance) {
+        minValue = 0;
+        maxValue = 4;
+    }
+
+    sensorValues_[index] = constrain(sensorValues_[index] + delta, minValue, maxValue);
+    applySensorControl();
+}
+
+const char* CameraManager::sensorControlName() const {
+    switch (sensorControl_) {
+        case SensorControl::Brightness:
+            return "BRIGHT";
+        case SensorControl::Contrast:
+            return "CONTRAST";
+        case SensorControl::Saturation:
+            return "SAT";
+        case SensorControl::SpecialEffect:
+            return "SENSOR FX";
+        case SensorControl::WhiteBalance:
+            return "WB";
+        case SensorControl::Count:
+            return "SENSOR";
+    }
+    return "SENSOR";
+}
+
+int CameraManager::sensorControlValue() const {
+    return sensorValues_[static_cast<int>(sensorControl_)];
+}
+
+void CameraManager::applySensorControl() {
+    if (!initialized_) {
+        return;
+    }
+
+    sensor_t* sensor = esp_camera_sensor_get();
+    if (sensor == nullptr) {
+        return;
+    }
+
+    switch (sensorControl_) {
+        case SensorControl::Brightness:
+            sensor->set_brightness(sensor, sensorControlValue());
+            break;
+        case SensorControl::Contrast:
+            sensor->set_contrast(sensor, sensorControlValue());
+            break;
+        case SensorControl::Saturation:
+            sensor->set_saturation(sensor, sensorControlValue());
+            break;
+        case SensorControl::SpecialEffect:
+            sensor->set_special_effect(sensor, sensorControlValue());
+            break;
+        case SensorControl::WhiteBalance:
+            sensor->set_wb_mode(sensor, sensorControlValue());
+            break;
+        case SensorControl::Count:
+            break;
+    }
+
+    Serial.printf("[CAM] %s=%d\n", sensorControlName(), sensorControlValue());
 }
