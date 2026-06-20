@@ -61,9 +61,14 @@ Azoth_GlitchCam/
 ## Démarrage rapide
 1. Installer VS Code + extension PlatformIO.
 2. Ouvrir le dépôt.
-3. Compiler l'environnement `esp32-s3-devkitc-1`.
+3. Compiler l'environnement `azoth_esp32_s3_n16r8`.
 4. Flasher la carte.
 5. Ouvrir le moniteur série à `115200`.
+
+Le projet utilise un board PlatformIO local :
+- [`boards/azoth_esp32_s3_n16r8.json`](boards/azoth_esp32_s3_n16r8.json)
+
+Il déclare explicitement ESP32-S3 WROOM, 16MB flash, 8MB PSRAM OPI, partitions 16MB et USB série externe CH343.
 
 ## Suivi et pilotage
 - Spécification: [`docs/spec_projet.md`](docs/spec_projet.md)
