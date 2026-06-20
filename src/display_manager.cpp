@@ -15,8 +15,10 @@ public:
         auto busConfig = bus_.config();
         busConfig.spi_host = SPI2_HOST;
         busConfig.spi_mode = 0;
-        busConfig.freq_write = 40000000;
-        busConfig.freq_read = 16000000;
+        // 20 MHz reste fiable avec un écran ST7796 déporté sur fils Dupont.
+        // Repasser à 40 MHz seulement après validation hardware.
+        busConfig.freq_write = 20000000;
+        busConfig.freq_read = 8000000;
         busConfig.pin_sclk = 21;
         busConfig.pin_mosi = 47;
         busConfig.pin_miso = -1;
@@ -44,15 +46,21 @@ LGFXAzothS3 g_tft;
 }
 
 bool DisplayManager::begin() {
+    Serial.println("[DISPLAY] Init ST7796 SPI2 SCLK=21 MOSI=47 DC=3 CS=GND RST=3V3");
     g_tft.init();
+    delay(120);
     g_tft.setRotation(1);
     g_tft.setSwapBytes(true);
     g_tft.fillScreen(TFT_BLACK);
+    Serial.printf("[DISPLAY] Ready width=%d height=%d\n", g_tft.width(), g_tft.height());
     return true;
 }
 
 void DisplayManager::drawSplash() {
     g_tft.fillScreen(TFT_BLACK);
+    g_tft.fillRect(0, 0, 160, 18, TFT_RED);
+    g_tft.fillRect(160, 0, 160, 18, TFT_GREEN);
+    g_tft.fillRect(320, 0, 160, 18, TFT_BLUE);
     g_tft.setTextColor(TFT_ORANGE);
     g_tft.setTextSize(4);
     g_tft.drawCenterString("Azoth", 240, 120);
