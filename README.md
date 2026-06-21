@@ -62,8 +62,14 @@ Azoth_GlitchCam/
 1. Installer VS Code + extension PlatformIO.
 2. Ouvrir le dépôt.
 3. Compiler l'environnement `azoth_esp32_s3_n16r8`.
-4. Flasher la carte.
+4. Brancher le port USB du CH343, puis flasher la carte. PlatformIO detecte le
+   port serie et esptool pilote automatiquement RESET/BOOT.
 5. Ouvrir le moniteur série à `115200`.
+
+Si la carte ne passe pas automatiquement en bootloader, maintenir `BOOT`,
+appuyer brièvement sur `RESET`, relâcher `BOOT`, puis relancer l'upload. Une
+erreur `No serial data received` signifie que la ROM de téléchargement ne
+répond pas ; ce n'est ni une erreur de compilation ni un manque de flash.
 
 Le projet utilise un board PlatformIO local :
 - [`boards/azoth_esp32_s3_n16r8.json`](boards/azoth_esp32_s3_n16r8.json)
