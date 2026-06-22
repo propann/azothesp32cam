@@ -62,14 +62,17 @@ Azoth_GlitchCam/
 1. Installer VS Code + extension PlatformIO.
 2. Ouvrir le dépôt.
 3. Compiler l'environnement `azoth_esp32_s3_n16r8`.
-4. Brancher le port USB du CH343, puis flasher la carte. PlatformIO detecte le
-   port serie et esptool pilote automatiquement RESET/BOOT.
-5. Ouvrir le moniteur série à `115200`.
+4. Vérifier que le tactile `CTP_SCL` est câblé sur GPIO41, jamais GPIO46.
+5. Brancher le port USB du CH343, puis flasher la carte. PlatformIO détecte le
+   port série et esptool pilote automatiquement RESET/BOOT.
+6. Ouvrir le moniteur série à `115200`.
 
 Si la carte ne passe pas automatiquement en bootloader, maintenir `BOOT`,
 appuyer brièvement sur `RESET`, relâcher `BOOT`, puis relancer l'upload. Une
 erreur `No serial data received` signifie que la ROM de téléchargement ne
 répond pas ; ce n'est ni une erreur de compilation ni un manque de flash.
+Sur l'ESP32-S3, vérifier en priorité qu'aucun périphérique ne tire GPIO46 vers
+le haut pendant RESET.
 
 Le projet utilise un board PlatformIO local :
 - [`boards/azoth_esp32_s3_n16r8.json`](boards/azoth_esp32_s3_n16r8.json)

@@ -5,7 +5,10 @@
 
 namespace {
 constexpr int kPinSda = 48;
-constexpr int kPinScl = 46;
+// GPIO46 est une broche de strapping. Le bootloader UART du S3 exige
+// GPIO0=LOW et GPIO46=LOW au reset ; le pull-up I2C du FT6336U empêchait donc
+// systématiquement l'entrée en mode téléchargement.
+constexpr int kPinScl = 41;
 }
 
 bool TouchManager::begin() {

@@ -1,7 +1,8 @@
 # Matrice de câblage validée — Azoth GlitchCam S3
 
 ## Règles de base
-- Écran ST7796 et tactile FT6336U câblés uniquement sur des GPIO libres de l'ESP32-S3 WROOM Cam.
+- Écran ST7796 et tactile FT6336U câblés sans utiliser GPIO0/GPIO46, qui
+  déterminent le mode de démarrage de l'ESP32-S3.
 - MicroSD de l'écran non utilisée (slot SD de la carte S3 uniquement).
 - `LCD_CS` tiré à GND et `LCD_RST` tiré à 3V3 pour économiser des GPIO.
 
@@ -18,10 +19,14 @@
 | LED | 3V3 | Alim | Rétroéclairage toujours actif |
 | SDO / MISO | Non connecté | SPI | Inutile (écriture seule) |
 | CTP_SDA | GPIO 48 | I2C | Données FT6336U |
-| CTP_SCL | GPIO 46 | I2C | Horloge FT6336U |
+| CTP_SCL | GPIO 41 | I2C | Horloge FT6336U ; GPIO46 interdit (strapping boot) |
 | CTP_RST | 3V3 | I2C | Reset passif |
 | CTP_INT | Non connecté | I2C | Non utilisé (polling) |
 | SD_CS | Non connecté | SPI | Désactivé pour éviter conflits |
+
+> Important : ne pas ajouter de pull-up ni de périphérique maintenant GPIO46
+> à l'état haut. Le mode téléchargement UART exige GPIO0=LOW et GPIO46=LOW au
+> moment où RESET est relâché.
 
 ## Caméra OV5640 AF
 | Signal caméra | Broche ESP32-S3 |
